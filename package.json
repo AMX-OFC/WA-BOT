@@ -5,11 +5,11 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node --max-old-space-size=512 index.js",
-    "dev": "node --watch \"$HOME/storage/shared/WHATSAPP-BOT/index.js\"",
-    "pm2": "pm2 start \"$HOME/storage/shared/WHATSAPP-BOT/index.js\" --name whatsapp-bot",
-    "colab": "node --no-warnings \"$HOME/storage/shared/WHATSAPP-BOT/index.js\"",
-    "termux": "NODE_ENV=production node --max-old-space-size=256 \"$HOME/storage/shared/WHATSAPP-BOT/index.js\""
+    "start": "node --max-old-space-size=512 /storage/shared/WHATSAPP-BOT/index.js",
+    "dev": "node --watch index.js",
+    "pm2": "pm2 start index.js --name whatsapp-bot",
+    "colab": "node --no-warnings index.js",
+    "termux": "NODE_ENV=production node --max-old-space-size=256 index.js"
   },
   "keywords": [
     "whatsapp",
