@@ -2,14 +2,14 @@
   "name": "WHATSAPP-BOT",
   "version": "1.0.0",
   "description": "Bot de WhatsApp otimizado para VPS, Termux, Google Colab e Sandboxes",
-  "main": "index.js",
+  "main": "$HOME/storage/shared/WHATSAPP-BOT/index.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node --max-old-space-size=512 /sdcard/WHATSAPP-BOT/index.js",
-    "dev": "node --watch /sdcard/WHATSAPP-BOT/index.js",
-    "pm2": "pm2 start /sdcard/WHATSAPP-BOT/index.js --name whatsapp-bot",
-    "colab": "node --no-warnings /sdcard/WHATSAPP-BOT/index.js",
-    "termux": "NODE_ENV=production node --max-old-space-size=256 /sdcard/WHATSAPP-BOT/index.js"
+    "start": "node --max-old-space-size=512 \"$HOME/storage/shared/WHATSAPP-BOT/index.js\"",
+    "dev": "node --watch \"$HOME/storage/shared/WHATSAPP-BOT/index.js\"",
+    "pm2": "pm2 start \"$HOME/storage/shared/WHATSAPP-BOT/index.js\" --name whatsapp-bot",
+    "colab": "node --no-warnings \"$HOME/storage/shared/WHATSAPP-BOT/index.js\"",
+    "termux": "NODE_ENV=production node --max-old-space-size=256 \"$HOME/storage/shared/WHATSAPP-BOT/index.js\""
   },
   "keywords": [
     "whatsapp",
