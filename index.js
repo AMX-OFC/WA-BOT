@@ -39,7 +39,7 @@ CONFIGURAÇÃO
 ============================================================ */
 const BOT_NAME = "🤖「 WHATSAPP-BOT 」🤖";
 const BOT_EMOJI = "🤖";
-const BASE_DIR = path.resolve("/storage/shared/");
+const BASE_DIR = path.resolve("/storage/shared/WHATSAPP-BOT/");
 const ASSETS_DIR = path.join(BASE_DIR, "assets");
 const BAILEYS_DIR = path.join(ASSETS_DIR, "database", "baileys");
 const TEMP_DIR = path.join(ASSETS_DIR, "temp");
