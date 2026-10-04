@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node --max-old-space-size=512 /storage/shared/WHATSAPP-BOT/index.js",
+    "start": "node --max-old-space-size=512 $HOME/storage/shared/WHATSAPP-BOT/index.js",
     "dev": "node --watch index.js",
     "pm2": "pm2 start index.js --name whatsapp-bot",
     "colab": "node --no-warnings index.js",
