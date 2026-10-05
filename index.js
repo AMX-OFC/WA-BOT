@@ -144,8 +144,13 @@ function readCommandsFromDir(dirPath) {
     }
     if (!item.endsWith(".js")) continue;
     try {
-      delete require.cache[require.resolve(fullPath)];
-      const mod = require(fullPath);
+      // Carregamento seguro em memória para evitar problemas de lstat/realpath no Termux storage compartilhado
+      const code = fs.readFileSync(fullPath, "utf8");
+      const m = { exports: {} };
+      const wrapper = Function("module", "exports", "__dirname", "__filename", code);
+      wrapper(m, m.exports, path.dirname(fullPath), fullPath);
+      const mod = m.exports;
+
       const baseName = path.basename(item, ".js").toLowerCase();
       const commandNames = new Set([baseName]);
       if (mod && typeof mod === "object") {
