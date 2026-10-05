@@ -35,12 +35,13 @@ const {
 } = baileys;
 
 /* ============================================================
-CONFIGURAÇÃO CORRIGIDA PARA O TERMUX
+CONFIGURAÇÃO CORRIGIDA PARA O TERMUX (MEMÓRIA INTERNA)
 ============================================================ */
 const BOT_NAME = "🤖「 WHATSAPP-BOT 」🤖";
 const BOT_EMOJI = "🤖";
 const HOME_DIR = process.env.HOME || require("node:os").homedir();
-const BASE_DIR = path.join(HOME_DIR, "storage", "shared", "WHATSAPP-BOT");
+// Corrigido para apontar diretamente para a memória interna do Termux
+const BASE_DIR = path.join(HOME_DIR, "WHATSAPP-BOT");
 const ASSETS_DIR = path.join(BASE_DIR, "assets");
 const BAILEYS_DIR = path.join(ASSETS_DIR, "database", "baileys");
 const TEMP_DIR = path.join(ASSETS_DIR, "temp");
@@ -113,7 +114,7 @@ function question(message) {
 }
 
 /* ============================================================
-HOT-RELOAD DE COMANDOS (SEM REINICIAR O BOT INTEIRO)
+HOT-RELOAD DE COMANDOS CORRIGIDO
 ============================================================ */
 const commands = new Map();
 
@@ -144,12 +145,9 @@ function readCommandsFromDir(dirPath) {
     }
     if (!item.endsWith(".js")) continue;
     try {
-      // Carregamento seguro em memória para evitar problemas de lstat/realpath no Termux storage compartilhado
-      const code = fs.readFileSync(fullPath, "utf8");
-      const m = { exports: {} };
-      const wrapper = Function("module", "exports", "__dirname", "__filename", code);
-      wrapper(m, m.exports, path.dirname(fullPath), fullPath);
-      const mod = m.exports;
+      // Limpa o cache do require para permitir recarregamento limpo sem falhas no Termux
+      delete require.cache[require.resolve(fullPath)];
+      const mod = require(fullPath);
 
       const baseName = path.basename(item, ".js").toLowerCase();
       const commandNames = new Set([baseName]);
