@@ -1,8 +1,8 @@
 /**
-============================================================
-AMHEEX BOT — ARQUIVO ÚNICO (BLINDADO, RESILIENTE & FIXADO)
-============================================================
-*/
+ * ============================================================
+ * AMHEEX BOT — ARQUIVO ÚNICO (BLINDADO, RESILIENTE & FIXADO)
+ * ============================================================
+ */
 "use strict";
 const fs = require("node:fs");
 const path = require("node:path");
@@ -35,20 +35,18 @@ const {
 } = baileys;
 
 /* ============================================================
-CONFIGURAÇÃO CORRIGIDA PARA O TERMUX (MEMÓRIA INTERNA)
+   CONFIGURAÇÃO
 ============================================================ */
 const BOT_NAME = "🤖「 WHATSAPP-BOT 」🤖";
 const BOT_EMOJI = "🤖";
-const HOME_DIR = process.env.HOME || require("node:os").homedir();
-// Corrigido para apontar diretamente para a memória interna do Termux
-const BASE_DIR = path.join(HOME_DIR, "WHATSAPP-BOT");
+const BASE_DIR = path.resolve(HOME_DIR, "storage","shared", "WHATSAPP-BOT");
 const ASSETS_DIR = path.join(BASE_DIR, "assets");
 const BAILEYS_DIR = path.join(ASSETS_DIR, "database", "baileys");
 const TEMP_DIR = path.join(ASSETS_DIR, "temp");
 const LOG_FILE = path.join(TEMP_DIR, "wa-logs.txt");
 
 /* ============================================================
-DIRETÓRIOS DE COMANDOS
+   DIRETÓRIOS DE COMANDOS
 ============================================================ */
 const POSSIBLE_CMD_DIRS = [
   path.join(BASE_DIR, "src", "command"),
@@ -58,7 +56,7 @@ const CMD_DIRS = POSSIBLE_CMD_DIRS.filter(dir => fs.existsSync(dir));
 const CMD_DIR = CMD_DIRS[0] || path.join(BASE_DIR, "src", "command");
 
 /* ============================================================
-CRIA DIRETÓRIOS
+   CRIA DIRETÓRIOS
 ============================================================ */
 for (const dir of [ASSETS_DIR, BAILEYS_DIR, TEMP_DIR, CMD_DIR]) {
   try {
@@ -71,7 +69,7 @@ for (const dir of [ASSETS_DIR, BAILEYS_DIR, TEMP_DIR, CMD_DIR]) {
 }
 
 /* ============================================================
-LOGGER & LOGS
+   LOGGER & LOGS
 ============================================================ */
 const logger = pino(
   {
@@ -90,7 +88,7 @@ function warning(message) { log("WARNING", message); }
 function error(message) { log("ERROR", message); }
 
 /* ============================================================
-INPUT DE PAREAMENTO
+   INPUT DE PAREAMENTO
 ============================================================ */
 let activeReadline = null;
 
@@ -114,7 +112,7 @@ function question(message) {
 }
 
 /* ============================================================
-HOT-RELOAD DE COMANDOS CORRIGIDO
+   HOT-RELOAD DE COMANDOS (SEM REINICIAR O BOT INTEIRO)
 ============================================================ */
 const commands = new Map();
 
@@ -145,10 +143,8 @@ function readCommandsFromDir(dirPath) {
     }
     if (!item.endsWith(".js")) continue;
     try {
-      // Limpa o cache do require para permitir recarregamento limpo sem falhas no Termux
       delete require.cache[require.resolve(fullPath)];
       const mod = require(fullPath);
-
       const baseName = path.basename(item, ".js").toLowerCase();
       const commandNames = new Set([baseName]);
       if (mod && typeof mod === "object") {
@@ -186,7 +182,7 @@ function findCommand(text) {
 }
 
 /* ============================================================
-AUTO RESTART APENAS PARA ARQUIVOS RAIZ / SISTEMA
+   AUTO RESTART APENAS PARA ARQUIVOS RAIZ / SISTEMA
 ============================================================ */
 const AUTO_RESTART = {
   enabled: true,
@@ -298,7 +294,8 @@ function startBaseDirWatcher() {
   if (!AUTO_RESTART.enabled || AUTO_RESTART.watcherStarted) return;
   AUTO_RESTART.watcherStarted = true;
   info("Watcher do sistema e atualização rápida de comandos ativos.");
-
+  
+  // Watcher dos comandos para Hot-Reload
   const targetDirs = CMD_DIRS.length ? CMD_DIRS : [CMD_DIR];
   for (const cDir of targetDirs) {
     try {
@@ -327,7 +324,7 @@ function startBaseDirWatcher() {
 }
 
 /* ============================================================
-CACHE & CONTROLE DE MENSAGENS
+   CACHE & CONTROLE DE MENSAGENS
 ============================================================ */
 const msgRetryCounterCache = new NodeCache();
 const outgoingIds = new Set();
@@ -345,7 +342,7 @@ function markOutgoing(result) {
 }
 
 /* ============================================================
-EXTRAÇÃO E TRATAMENTO DE MENSAGENS
+   EXTRAÇÃO E TRATAMENTO DE MENSAGENS
 ============================================================ */
 function unwrapMessage(message) {
   let current = message || {};
@@ -405,37 +402,47 @@ function extractMessageDetails(webMessage) {
     let text = "";
     let data = {};
 
-    const interactiveMsg = message?.interactiveResponseMessage || message?.viewOnceMessage?.message?.interactiveResponseMessage; 
-    if (interactiveMsg?.nativeFlowResponseMessage?.paramsJson) { 
-      try { 
-        const parsed = JSON.parse(interactiveMsg.nativeFlowResponseMessage.paramsJson); 
-        text = parsed.id || parsed.selectedId || ""; 
-      } catch (_) {} 
-    } else if (message.buttonsResponseMessage) { 
-      text = message.buttonsResponseMessage.selectedButtonId || ""; 
-    } else if (message.templateButtonReplyMessage) { 
-      text = message.templateButtonReplyMessage.selectedId || ""; 
-    } else if (message.conversation) { 
-      type = "text"; 
-      text = message.conversation; 
-      data = { text: message.conversation }; 
-    } else if (message.extendedTextMessage) { 
-      type = "extended_text"; 
-      text = message.extendedTextMessage.text || ""; 
-      data = { ...message.extendedTextMessage }; 
-    } else if (message.imageMessage) { 
-      type = "image"; 
-      text = message.imageMessage.caption || ""; 
-      data = { ...message.imageMessage }; 
-    } else if (message.videoMessage) { 
-      type = "video"; 
-      text = message.videoMessage.caption || ""; 
-      data = { ...message.videoMessage }; 
-    } else { 
-      type = getMessageType(webMessage); 
-      data = { ...message }; 
-    } 
-    return { type, text: String(text || "").trim(), data, raw: message, original, contextInfo: getContextInfo(message), key, webMessage }; 
+    const interactiveMsg = message?.interactiveResponseMessage || message?.viewOnceMessage?.message?.interactiveResponseMessage;
+    if (interactiveMsg?.nativeFlowResponseMessage?.paramsJson) {
+      try {
+        const parsed = JSON.parse(interactiveMsg.nativeFlowResponseMessage.paramsJson);
+        text = parsed.id || parsed.selectedId || "";
+      } catch (_) {}
+    } else if (message.buttonsResponseMessage) {
+      text = message.buttonsResponseMessage.selectedButtonId || "";
+    } else if (message.templateButtonReplyMessage) {
+      text = message.templateButtonReplyMessage.selectedId || "";
+    } else if (message.conversation) {
+      type = "text";
+      text = message.conversation;
+      data = { text: message.conversation };
+    } else if (message.extendedTextMessage) {
+      type = "extended_text";
+      text = message.extendedTextMessage.text || "";
+      data = { ...message.extendedTextMessage };
+    } else if (message.imageMessage) {
+      type = "image";
+      text = message.imageMessage.caption || "";
+      data = { ...message.imageMessage };
+    } else if (message.videoMessage) {
+      type = "video";
+      text = message.videoMessage.caption || "";
+      data = { ...message.videoMessage };
+    } else {
+      type = getMessageType(webMessage);
+      data = { ...message };
+    }
+
+    return {
+      type,
+      text: String(text || "").trim(),
+      data,
+      raw: message,
+      original,
+      contextInfo: getContextInfo(message),
+      key,
+      webMessage
+    };
   } catch {
     return {
       type: "unknown", text: "", data: {}, raw: {}, original: webMessage?.message || {},
@@ -458,7 +465,7 @@ function getChatType(remoteJid) {
 }
 
 /* ============================================================
-FUNÇÕES DE ENVIO E INTERAÇÕES
+   FUNÇÕES DE ENVIO E INTERAÇÕES
 ============================================================ */
 async function sendText(socket, jid, text, quoted) {
   if (!text) return null;
@@ -471,7 +478,7 @@ async function sendText(socket, jid, text, quoted) {
 }
 
 /* ============================================================
-CONTEXTO TOTAL PARA OS COMANDOS
+   CONTEXTO TOTAL PARA OS COMANDOS
 ============================================================ */
 function createCommandContext(socket, webMessage, text, commandName) {
   const jid = getRemoteJid(webMessage);
@@ -506,7 +513,7 @@ function createCommandContext(socket, webMessage, text, commandName) {
 }
 
 /* ============================================================
-EXECUÇÃO DE COMANDOS
+   EXECUÇÃO DE COMANDOS
 ============================================================ */
 async function executeCommand(socket, webMessage, text) {
   try {
@@ -517,15 +524,15 @@ async function executeCommand(socket, webMessage, text) {
     const context = createCommandContext(socket, webMessage, text, commandName);
     info(`Executando: ${commandName} por ${context.senderNumber || "desconhecido"}`);
 
-    if (typeof mod === "function") { 
-      await mod(context, webMessage, context.args); 
-    } else if (mod && typeof mod.handle === "function") { 
-      await mod.handle(context, webMessage, context.args); 
-    } else if (mod && typeof mod.execute === "function") { 
-      await mod.execute(context, webMessage, context.args); 
-    } 
-    success(`Concluído: ${commandName}`); 
-    return true; 
+    if (typeof mod === "function") {
+      await mod(context, webMessage, context.args);
+    } else if (mod && typeof mod.handle === "function") {
+      await mod.handle(context, webMessage, context.args);
+    } else if (mod && typeof mod.execute === "function") {
+      await mod.execute(context, webMessage, context.args);
+    }
+    success(`Concluído: ${commandName}`);
+    return true;
   } catch (err) {
     error(`Erro isolado no comando (não derruba a conexão): ${err?.stack || err?.message || err}`);
     return true;
@@ -533,7 +540,7 @@ async function executeCommand(socket, webMessage, text) {
 }
 
 /* ============================================================
-PROCESSAMENTO DE MENSAGENS
+   PROCESSAMENTO DE MENSAGENS
 ============================================================ */
 async function processMessage(socket, webMessage) {
   try {
@@ -550,7 +557,7 @@ async function processMessage(socket, webMessage) {
 }
 
 /* ============================================================
-LIMPEZA DE SESSÃO SE CORROMPIDA
+   LIMPEZA DE SESSÃO SE CORROMPIDA
 ============================================================ */
 function purgeCorruptedSession() {
   try {
@@ -567,7 +574,7 @@ function purgeCorruptedSession() {
 }
 
 /* ============================================================
-CONEXÃO COM A BAILEYS (TRATAMENTO DE ERRO 440)
+   CONEXÃO COM A BAILEYS (TRATAMENTO DE ERRO 440)
 ============================================================ */
 async function connect() {
   if (AUTO_RESTART.restarting) return null;
@@ -600,81 +607,86 @@ async function connect() {
 
   socket.ev.on("connection.update", async update => {
     const { connection, qr, lastDisconnect } = update;
+    
+    if (qr && !state.creds.registered && !AUTO_RESTART.restarting) {
+      info("QR Code gerado (escaneie no aplicativo):");
+      qrcode.generate(qr, { small: true });
 
-    if (qr && !state.creds.registered && !AUTO_RESTART.restarting) { 
-      info("QR Code gerado (escaneie no aplicativo):"); 
-      qrcode.generate(qr, { small: true }); 
-      if (promptTimer) clearTimeout(promptTimer); 
-      promptTimer = setTimeout(async () => { 
-        if (AUTO_RESTART.restarting || state.creds.registered) return; 
-        try { 
-          const phoneNumber = await question("\nDigite o número com DDI (ex: 5511999999999) ou ENTER para QR Code: "); 
-          if (AUTO_RESTART.restarting) return; 
-          const cleanNumber = String(phoneNumber || "").replace(/[^0-9]/g, ""); 
-          if (cleanNumber) { 
-            info("Solicitando código de pareamento..."); 
-            const code = await socket.requestPairingCode(cleanNumber); 
-            console.log("\n================================="); 
-            success(`CÓDIGO DE PAREAMENTO: ${code}`); 
-            console.log("=================================\n"); 
-          } 
-        } catch (err) { 
-          if (!AUTO_RESTART.restarting) { 
-            error(`Erro no pareamento: ${err?.message || err}`); 
-          } 
-        } 
-      }, 500); 
-    } 
+      if (promptTimer) clearTimeout(promptTimer);
 
-    if (connection === "open") { 
-      if (promptTimer) clearTimeout(promptTimer); 
-      if (activeReadline) { 
-        try { activeReadline.close(); } catch {} 
-        activeReadline = null; 
-      } 
-      success("Conectado ao WhatsApp com sucesso!"); 
-    } 
+      promptTimer = setTimeout(async () => {
+        if (AUTO_RESTART.restarting || state.creds.registered) return;
+        try {
+          const phoneNumber = await question("\nDigite o número com DDI (ex: 5511999999999) ou ENTER para QR Code: ");
+          if (AUTO_RESTART.restarting) return;
+          const cleanNumber = String(phoneNumber || "").replace(/[^0-9]/g, "");
+          if (cleanNumber) {
+            info("Solicitando código de pareamento...");
+            const code = await socket.requestPairingCode(cleanNumber);
+            console.log("\n=================================");
+            success(`CÓDIGO DE PAREAMENTO: ${code}`);
+            console.log("=================================\n");
+          }
+        } catch (err) {
+          if (!AUTO_RESTART.restarting) {
+            error(`Erro no pareamento: ${err?.message || err}`);
+          }
+        }
+      }, 500);
+    }
 
-    if (connection === "close") { 
-      if (promptTimer) clearTimeout(promptTimer); 
-      if (activeReadline) { 
-        try { activeReadline.close(); } catch {} 
-        activeReadline = null; 
-      } 
-      activeSocket = null; 
-      if (AUTO_RESTART.restarting) return; 
+    if (connection === "open") {
+      if (promptTimer) clearTimeout(promptTimer);
+      if (activeReadline) {
+        try { activeReadline.close(); } catch {}
+        activeReadline = null;
+      }
+      success("Conectado ao WhatsApp com sucesso!");
+    }
+
+    if (connection === "close") {
+      if (promptTimer) clearTimeout(promptTimer);
+      if (activeReadline) {
+        try { activeReadline.close(); } catch {}
+        activeReadline = null;
+      }
       
-      const statusCode = lastDisconnect?.error?.output?.statusCode || lastDisconnect?.error?.statusCode; 
-      const reason = lastDisconnect?.error?.output?.payload?.error || "Desconhecido"; 
-      warning(`Conexão fechada. Código Status: ${statusCode || "N/A"} (${reason})`); 
+      activeSocket = null;
+      if (AUTO_RESTART.restarting) return;
+      
+      const statusCode = lastDisconnect?.error?.output?.statusCode || lastDisconnect?.error?.statusCode;
+      const reason = lastDisconnect?.error?.output?.payload?.error || "Desconhecido";
+      
+      warning(`Conexão fechada. Código Status: ${statusCode || "N/A"} (${reason})`);
 
-      if (statusCode === 440) { 
-        warning("Erro 440 (Sessão Conflitante). Aguardando estabilização para reconectar..."); 
-        if (reconnectTimer) clearTimeout(reconnectTimer); 
-        reconnectTimer = setTimeout(() => connect(), 3000); 
-        return; 
-      } 
+      // Tratamento para Erro 440 ou sessão substituída/duplicada
+      if (statusCode === 440) {
+        warning("Erro 440 (Sessão Conflitante). Aguardando estabilização para reconectar...");
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => connect(), 3000);
+        return;
+      }
 
-      if (statusCode === DisconnectReason.loggedOut || statusCode === 401) { 
-        error("Sessão revogada ou inválida (Logged Out). Limpando sessão..."); 
-        purgeCorruptedSession(); 
-        warning("Reiniciando para gerar novo QR Code em 5 segundos..."); 
-        setTimeout(() => connect(), 5000); 
-        return; 
-      } 
-
-      warning("Reconectando em 3 segundos..."); 
-      if (reconnectTimer) clearTimeout(reconnectTimer); 
-      reconnectTimer = setTimeout(async () => { 
-        reconnectTimer = null; 
-        if (AUTO_RESTART.restarting) return; 
-        try { 
-          await connect(); 
-        } catch (err) { 
-          error(`Erro ao reconectar: ${err?.message || err}`); 
-        } 
-      }, 3000); 
-    } 
+      if (statusCode === DisconnectReason.loggedOut || statusCode === 401) {
+        error("Sessão revogada ou inválida (Logged Out). Limpando sessão...");
+        purgeCorruptedSession();
+        warning("Reiniciando para gerar novo QR Code em 5 segundos...");
+        setTimeout(() => connect(), 5000);
+        return;
+      }
+      
+      warning("Reconectando em 3 segundos...");
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      reconnectTimer = setTimeout(async () => {
+        reconnectTimer = null;
+        if (AUTO_RESTART.restarting) return;
+        try {
+          await connect();
+        } catch (err) {
+          error(`Erro ao reconectar: ${err?.message || err}`);
+        }
+      }, 3000);
+    }
   });
 
   socket.ev.on("creds.update", saveCreds);
@@ -695,12 +707,12 @@ async function connect() {
 }
 
 /* ============================================================
-INICIALIZAÇÃO & TRATAMENTO DE ERROS GLOBAIS
+   INICIALIZAÇÃO & TRATAMENTO DE ERROS GLOBAIS
 ============================================================ */
 async function start() {
   console.clear();
   console.log("\n🤖「 ============================================================ 」🤖\n");
-  console.log(" 🤖「 WHATSAPP BOT 」🤖");
+  console.log("                       🤖「 WHATSAPP BOT 」🤖");
   console.log("\n🤖「 ============================================================ 」🤖\n");
   info(`BASE_DIR: ${BASE_DIR}`);
   info(`Diretório de Comandos: ${CMD_DIR}`);
