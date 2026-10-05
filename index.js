@@ -121,7 +121,7 @@ function normalizeCommandName(value) {
   return String(value || "")
     .trim()
     .toLowerCase()
-    .replace(/^[!/#.$%]+/, "")
+    .replace(/^[!/#.$%\\-+]+/, "")
     .split(/\s+/)[0];
 }
 
@@ -147,6 +147,7 @@ function readCommandsFromDir(dirPath) {
       delete require.cache[require.resolve(fullPath)];
       const mod = require(fullPath);
       const baseName = path.basename(item, ".js").toLowerCase();
+      
       const commandNames = new Set([baseName]);
       if (mod && typeof mod === "object") {
         if (mod.name) commandNames.add(String(mod.name).toLowerCase());
@@ -154,9 +155,10 @@ function readCommandsFromDir(dirPath) {
         if (Array.isArray(mod.aliases)) mod.aliases.forEach(a => commandNames.add(String(a).toLowerCase()));
         if (Array.isArray(mod.prefixes)) mod.prefixes.forEach(p => commandNames.add(String(p).toLowerCase()));
       }
+      
       for (const name of commandNames) {
         const normalized = normalizeCommandName(name);
-        if (normalized && !commands.has(normalized)) {
+        if (normalized) {
           commands.set(normalized, mod);
         }
       }
@@ -177,9 +179,12 @@ function findCommand(text) {
   const clean = String(text || "").trim();
   const firstWord = normalizeCommandName(clean);
   if (!firstWord) return null;
-  const command = commands.get(firstWord);
-  if (!command) return null;
-  return { name: firstWord, command };
+  
+  if (commands.has(firstWord)) {
+    return { name: firstWord, command: commands.get(firstWord) };
+  }
+  
+  return null;
 }
 
 /* ============================================================
